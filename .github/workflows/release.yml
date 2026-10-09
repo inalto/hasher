@@ -29,13 +29,16 @@ jobs:
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    # Linux is built inside a Rocky Linux 8 container (glibc 2.28) so that the binary runs on
+    # EL8+/Ubuntu 20.04+/Debian 10+ and newer. Not used when a self-hosted Linux runner is set.
+    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # ubuntu-22.04: older glibc, binary compatible with more distributions.
           - name: linux-x86_64
-            os: ${{ vars.RUNNER_LINUX || 'ubuntu-22.04' }}
+            os: ${{ vars.RUNNER_LINUX || 'ubuntu-latest' }}
+            container: ${{ vars.RUNNER_LINUX == '' && 'rockylinux:8' || '' }}
             artifact_glob: dist/hasher-*-linux-x86_64.tar.gz
           - name: windows-x86_64
             os: ${{ vars.RUNNER_WINDOWS || 'windows-latest' }}
@@ -68,8 +71,15 @@ jobs:
           echo "Version: ${VERSION}"
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
-      - name: System dependencies (GitHub-hosted Linux only)
-        if: runner.os == 'Linux' && runner.environment == 'github-hosted'
+      - name: System dependencies (Rocky Linux 8 container)
+        if: runner.os == 'Linux' && job.container.id != ''
+        run: |
+          dnf -y install gcc gcc-c++ gtk3-devel libxkbcommon-devel wayland-devel mesa-libGL-devel \
+            pkgconf-pkg-config curl git tar gzip file
+          echo "glibc: $(rpm -q glibc)"
+
+      - name: System dependencies (GitHub-hosted Ubuntu, no container)
+        if: runner.os == 'Linux' && runner.environment == 'github-hosted' && job.container.id == ''
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev \

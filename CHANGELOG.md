@@ -4,6 +4,16 @@ Tutte le modifiche rilevanti a Hasher sono documentate in questo file.
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il progetto adotta il
 [Versionamento Semantico](https://semver.org/lang/it/).
 
+## [0.1.1] - 2026-10-09
+
+### Corretto
+- Il binario Linux della release viene ora compilato in un container Rocky Linux 8 (glibc 2.28):
+  funziona su RHEL/Alma/Rocky 8 e successivi, Ubuntu 20.04+, Debian 10+. La 0.1.0 richiedeva
+  glibc 2.35 (Ubuntu 22.04) e non partiva su EL9.
+- Riconoscimento dei file di checksum con nomi convenzionali (`SHA256SUMS`, `MD5SUMS.txt`,
+  `checksums.txt`) e delle estensioni `.md4`, `.sha3-256`, `.sha3-512`, `.blake2b`.
+- Logo invertito nella scheda Informazioni in tema scuro; singolare corretto di "byte".
+
 ## [0.1.0] - 2026-10-09
 
 Prima versione.

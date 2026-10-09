@@ -45,7 +45,7 @@ cd hasher-<version>-linux-x86_64
 | Debian / Ubuntu | `libgtk-3-0 libgl1 libxkbcommon0` |
 | Fedora / RHEL / AlmaLinux / Rocky | `gtk3 mesa-libGL libxkbcommon` |
 
-The release binary is built on Ubuntu 22.04, so it needs **glibc 2.35 or newer**.
+The release binary is built inside a Rocky Linux 8 container, so it needs **glibc 2.28 or newer** (RHEL/AlmaLinux/Rocky 8+, Ubuntu 20.04+, Debian 10+, Fedora 29+).
 
 ### Add Hasher to the application menu (optional)
 

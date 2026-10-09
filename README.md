@@ -141,8 +141,8 @@ cd hasher-<versione>-linux-x86_64
 Servono le librerie di runtime GTK3 (dialoghi di apertura e salvataggio), X11 o Wayland e
 OpenGL/Mesa: sono presenti su qualsiasi desktop. Su un sistema minimale installa, per esempio,
 `libgtk-3-0`, `libgl1` e `libxkbcommon0` (Debian/Ubuntu) oppure `gtk3`, `mesa-libGL` e
-`libxkbcommon` (Fedora/RHEL). L'eseguibile è compilato su Ubuntu 22.04 (glibc 2.35), quindi
-richiede una distribuzione con glibc uguale o più recente.
+`libxkbcommon` (Fedora/RHEL). L'eseguibile è compilato in un container Rocky Linux 8 (glibc 2.28), quindi
+funziona su RHEL/Alma/Rocky 8 e successivi, Ubuntu 20.04+, Debian 10+ e distribuzioni più recenti.
 
 Integrazione opzionale nel menu delle applicazioni:
 

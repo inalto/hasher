@@ -25,7 +25,7 @@ Triggered by pushing a tag `vX.Y.Z`, or by hand (**Actions → Release → Run w
 
 | Job | What it does |
 |---|---|
-| `build` (matrix) | **linux-x86_64** on `ubuntu-22.04` (older glibc for wider compatibility) → `hasher-<version>-linux-x86_64.tar.gz`; **windows-x86_64** on `windows-latest` → `hasher-<version>-windows-x86_64.zip`; **macos-universal** on `macos-latest`: builds `x86_64-apple-darwin` and `aarch64-apple-darwin`, joins them with `lipo` and bundles `Hasher.app` → `hasher-<version>-macos-universal.zip`. Each package is uploaded as a workflow artifact. |
+| `build` (matrix) | **linux-x86_64** on `ubuntu-latest` inside a `rockylinux:8` container (glibc 2.28, for wide compatibility; the container is skipped when `RUNNER_LINUX` is set) → `hasher-<version>-linux-x86_64.tar.gz`; **windows-x86_64** on `windows-latest` → `hasher-<version>-windows-x86_64.zip`; **macos-universal** on `macos-latest`: builds `x86_64-apple-darwin` and `aarch64-apple-darwin`, joins them with `lipo` and bundles `Hasher.app` → `hasher-<version>-macos-universal.zip`. Each package is uploaded as a workflow artifact. |
 | `release` | Needs `build`. Downloads all artifacts, writes **`SHA256SUMS.txt`** (`sha256sum hasher-*`) and creates the **GitHub Release** with `generate_release_notes: true`. Runs only for tags or when `publish` is set. |
 
 The version used in the file names comes from the tag (`v1.2.3` → `1.2.3`); for manual runs it is read from `Cargo.toml`. If a tag and `Cargo.toml` disagree the workflow prints a warning. Note that the version **shown in the About box and written in exports** is the one in `Cargo.toml`.
@@ -78,7 +78,7 @@ Each variable holds **one runner label** (for example `hasher-windows`); the wor
 | All | **rustup** with the **stable** toolchain on the service user's `PATH`; Git |
 | Windows | **Visual Studio Build Tools 2022** with *Desktop development with C++* (MSVC and the Windows 10/11 SDK, providing `link.exe` and `rc.exe`); **Git for Windows** (the workflow uses `bash` for one step); **PowerShell 7** (`pwsh`), which the packaging step requires |
 | macOS | **Xcode Command Line Tools** (`xcode-select --install`: `lipo`, `codesign`, `iconutil`, `ditto`); `rustup target add x86_64-apple-darwin aarch64-apple-darwin` (the workflow also installs them if missing) |
-| Linux | The development packages of [[Building from Source]] (run `scripts/dev-deps-debian.sh` or `scripts/dev-deps-el9.sh`), because the "install system dependencies" step runs only on GitHub-hosted runners. The binary will need a glibc at least as new as the runner's. |
+| Linux | The development packages of [[Building from Source]] (run `scripts/dev-deps-debian.sh` or `scripts/dev-deps-el9.sh`), because the "install system dependencies" step runs only on GitHub-hosted runners. The Rocky Linux 8 container is not used on a self-hosted runner, so the binary will need a glibc at least as new as the runner's: build on the oldest distribution you want to support. |
 
 ### Security
 
