@@ -133,7 +133,7 @@ jobs:
 
       # ------------------------------------------------------------ Artifacts
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: hasher-${{ matrix.name }}
           path: ${{ matrix.artifact_glob }}
