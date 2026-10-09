@@ -1,0 +1,7 @@
+/target
+/dist
+*.log
+hasher.settings.json
+.DS_Store
+# original logo kept locally; the canonical copy is assets/brand/logo.svg
+/logo.svg

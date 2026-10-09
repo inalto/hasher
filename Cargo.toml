@@ -1,0 +1,76 @@
+[package]
+name = "hasher"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+description = "Hasher — calcolo e verifica di hash per file. Martini Multimedia s.a.s."
+authors = ["Martini Multimedia s.a.s."]
+publish = false
+build = "build.rs"
+
+[dependencies]
+# GUI
+eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+egui = "0.36"
+egui_extras = { version = "0.36", features = ["svg", "image"] }
+egui-phosphor = "0.14"
+rfd = "0.17"
+image = { version = "0.25", default-features = false, features = ["png"] }
+open = "5"
+
+# Hashing (own StreamHasher trait — no dependency on the external `digest` trait version)
+md2 = "0.11"
+md4 = "0.11"
+md-5 = "0.11"
+sha1 = "0.11"
+sha2 = "0.11"
+sha3 = "0.12"
+ripemd = "0.2"
+blake2 = "0.11"
+blake3 = "1.8"
+crc32fast = "1.5"
+crc = "3.4"
+xxhash-rust = { version = "0.8", features = ["xxh64", "xxh3"] }
+hex = "0.4"
+
+# Concurrency
+rayon = "1.12"
+crossbeam-channel = "0.5"
+
+# Export
+rust_xlsxwriter = "0.99"
+docx-rs = "0.4"
+csv = "1.3"
+
+# Data / config / i18n
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rust-i18n = "4.2"
+sys-locale = "0.3"
+dirs = "7"
+chrono = { version = "0.4", features = ["serde"] }
+walkdir = "2"
+humansize = "2"
+anyhow = "1"
+thiserror = "2"
+log = "0.4"
+env_logger = "0.11"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
