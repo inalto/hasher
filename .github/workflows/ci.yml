@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Formatting, lint and tests — always on a GitHub-hosted Linux runner (safe for PRs from forks).
+  check:
+    name: fmt / clippy / test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev \
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libssl-dev pkg-config
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo fmt
+        run: cargo fmt --all --check
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test
+        run: cargo test
+
+  # Release-profile build on the three platforms (no tests). Runs only on pushes to main, never on
+  # pull requests, so that self-hosted runners (if configured) never execute untrusted code.
+  #
+  # Runner selection: repository variables RUNNER_LINUX / RUNNER_WINDOWS / RUNNER_MACOS
+  # (Settings > Secrets and variables > Actions > Variables). Each one is a single runner label,
+  # e.g. "hasher-windows" for a self-hosted runner registered with that custom label.
+  # When a variable is unset the GitHub-hosted runner is used.
+  build-matrix:
+    name: build (${{ matrix.name }})
+    if: github.event_name == 'push'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ${{ vars.RUNNER_LINUX || 'ubuntu-latest' }}
+          - name: windows
+            os: ${{ vars.RUNNER_WINDOWS || 'windows-latest' }}
+          - name: macos
+            os: ${{ vars.RUNNER_MACOS || 'macos-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System dependencies (GitHub-hosted Linux only)
+        if: runner.os == 'Linux' && runner.environment == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev \
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libssl-dev pkg-config
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: build-${{ matrix.name }}
+
+      - name: cargo build --release
+        run: cargo build --release

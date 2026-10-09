@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Hasher
+GenericName=Hash calculator
+GenericName[it]=Calcolo di hash
+GenericName[fr]=Calcul d'empreintes
+GenericName[de]=Hash-Rechner
+GenericName[es]=Calculadora de hashes
+Comment=Compute and verify file hashes
+Comment[it]=Calcola e verifica gli hash dei file
+Comment[fr]=Calcule et vérifie les empreintes des fichiers
+Comment[de]=Berechnet und prüft Datei-Hashes
+Comment[es]=Calcula y verifica los hashes de los archivos
+Exec=hasher %F
+Icon=hasher
+Terminal=false
+Categories=Utility;Security;
+Keywords=hash;checksum;md5;sha1;sha256;crc32;verify;
+Keywords[it]=hash;checksum;md5;sha1;sha256;crc32;verifica;
+MimeType=
