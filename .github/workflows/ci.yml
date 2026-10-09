@@ -22,7 +22,7 @@ jobs:
     name: fmt / clippy / test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: System dependencies (Linux)
         run: |
@@ -67,7 +67,7 @@ jobs:
           - name: macos
             os: ${{ vars.RUNNER_MACOS || 'macos-latest' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: System dependencies (GitHub-hosted Linux only)
         if: runner.os == 'Linux' && runner.environment == 'github-hosted'
