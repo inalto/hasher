@@ -1,0 +1,182 @@
+name: Release
+
+# Triggered by pushing a `vX.Y.Z` tag (creates the GitHub Release) or manually
+# (workflow_dispatch: only produces downloadable artifacts on the run page, unless `publish` is set).
+#
+# Runner selection: repository variables RUNNER_LINUX / RUNNER_WINDOWS / RUNNER_MACOS
+# (Settings > Secrets and variables > Actions > Variables). Each one is a single runner label,
+# e.g. "hasher-windows" for a self-hosted runner registered with that custom label.
+# When a variable is unset the GitHub-hosted runner is used. Self-hosted runners need: rustup
+# (stable toolchain), and on Windows the Visual Studio Build Tools (MSVC + Windows SDK, for
+# link.exe and rc.exe), on macOS the Xcode Command Line Tools (lipo, codesign, iconutil, ditto).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Also publish a GitHub Release for the current Cargo.toml version (creates/updates tag v<version>)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ubuntu-22.04: older glibc, binary compatible with more distributions.
+          - name: linux-x86_64
+            os: ${{ vars.RUNNER_LINUX || 'ubuntu-22.04' }}
+            artifact_glob: dist/hasher-*-linux-x86_64.tar.gz
+          - name: windows-x86_64
+            os: ${{ vars.RUNNER_WINDOWS || 'windows-latest' }}
+            artifact_glob: dist/hasher-*-windows-x86_64.zip
+          - name: macos-universal
+            os: ${{ vars.RUNNER_MACOS || 'macos-latest' }}
+            artifact_glob: dist/hasher-*-macos-universal.zip
+            targets: x86_64-apple-darwin,aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version: from the tag (v1.2.3 -> 1.2.3); on manual runs from Cargo.toml.
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          CARGO_VERSION="$(sed -n 's/^version *= *"\(.*\)"/\1/p' Cargo.toml | head -n1)"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            if [[ "${VERSION}" != "${CARGO_VERSION}" ]]; then
+              echo "::warning::Tag (${VERSION}) does not match the version in Cargo.toml (${CARGO_VERSION})"
+            fi
+          else
+            VERSION="${CARGO_VERSION}"
+          fi
+          if [[ -z "${VERSION}" ]]; then
+            echo "::error::Unable to determine the version"
+            exit 1
+          fi
+          echo "Version: ${VERSION}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: System dependencies (GitHub-hosted Linux only)
+        if: runner.os == 'Linux' && runner.environment == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev \
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libssl-dev pkg-config
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # Empty on Linux/Windows; on macOS both targets for the universal binary.
+          targets: ${{ matrix.targets }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.name }}
+
+      # ---------------------------------------------------------------- Linux
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: cargo build --release
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: bash scripts/package-linux.sh "${VERSION}"
+
+      # -------------------------------------------------------------- Windows
+      # build.rs embeds the icon with winresource (rc.exe comes with the MSVC toolchain).
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cargo build --release
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: ./scripts/package-windows.ps1 $env:VERSION
+
+      # ---------------------------------------------------------------- macOS
+      - name: Build (macOS, x86_64 + aarch64)
+        if: runner.os == 'macOS'
+        run: |
+          cargo build --release --target x86_64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
+
+      - name: Universal binary (lipo)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p target/universal
+          lipo -create \
+            -output target/universal/hasher \
+            target/x86_64-apple-darwin/release/hasher \
+            target/aarch64-apple-darwin/release/hasher
+          lipo -info target/universal/hasher
+
+      - name: Bundle Hasher.app and zip (macOS)
+        if: runner.os == 'macOS'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: bash scripts/bundle-macos.sh "${VERSION}" target/universal/hasher
+
+      # ------------------------------------------------------------ Artifacts
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hasher-${{ matrix.name }}
+          path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+
+  # Publish the GitHub Release when the workflow runs from a tag, or on manual runs with `publish`.
+  release:
+    name: GitHub Release
+    needs: build
+    if: (github.ref_type == 'tag' && startsWith(github.ref_name, 'v')) || inputs.publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: hasher-*
+          path: dist
+          merge-multiple: true
+
+      - name: SHA-256 checksums
+        working-directory: dist
+        run: |
+          sha256sum hasher-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Release tag name
+        id: tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "name=${GITHUB_REF_NAME}" >> "${GITHUB_OUTPUT}"
+          else
+            V="$(sed -n 's/^version *= *"\(.*\)"/\1/p' Cargo.toml | head -n1)"
+            echo "name=v${V}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Create the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          files: dist/*
+          generate_release_notes: true

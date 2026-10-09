@@ -1,0 +1,58 @@
+name: Wiki sync
+
+# Publishes docs/wiki/** to the GitHub wiki of this repository (the <repo>.wiki.git repository).
+# Prerequisite (one-time, manual): the wiki must exist — open the "Wiki" tab on GitHub and click
+# "Create the first page" once (any content). GitHub creates the wiki git repository only at that
+# moment; until then every push to it fails with "Repository not found".
+on:
+  push:
+    branches: [main]
+    paths: ['docs/wiki/**', '.github/workflows/wiki.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone the wiki repository
+        id: clone
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+          if ! git clone --depth 1 "$URL" wiki-repo 2>clone.log; then
+            cat clone.log
+            echo "::error::The wiki repository does not exist yet. Open the Wiki tab on GitHub and click 'Create the first page' once, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Copy pages
+        run: |
+          set -euo pipefail
+          # Remove pages that no longer exist in docs/wiki (keep the .git directory).
+          find wiki-repo -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R docs/wiki/. wiki-repo/
+
+      - name: Commit and push
+        working-directory: wiki-repo
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki already up to date."
+            exit 0
+          fi
+          git commit -m "Sync wiki from docs/wiki @ ${GITHUB_SHA::7}"
+          git push
