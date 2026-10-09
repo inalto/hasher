@@ -183,18 +183,27 @@ fn about(ui: &mut Ui) {
     let p = pal(ui);
     ui.vertical_centered(|ui| {
         ui.add_space(6.0);
-        // Il wordmark navy resta leggibile su una tessera bianca anche in tema scuro.
-        Frame::new()
-            .fill(Color32::WHITE)
-            .stroke(Stroke::new(1.0, p.border))
-            .corner_radius(14)
-            .inner_margin(Margin::symmetric(28, 20))
-            .show(ui, |ui| {
-                ui.add(
-                    egui::Image::new(egui::include_image!("../../assets/brand/logo.svg"))
-                        .fit_to_exact_size(Vec2::new(240.0, 98.0)),
-                );
-            });
+        if ui.visuals().dark_mode {
+            // In tema scuro si usa la versione invertita del logo, che porta con sé il proprio sfondo.
+            ui.add(
+                egui::Image::new(egui::include_image!("../../assets/brand/logo-inverted.svg"))
+                    .fit_to_exact_size(Vec2::new(300.0, 200.0))
+                    .corner_radius(14),
+            );
+        } else {
+            // Il wordmark navy resta leggibile su una tessera bianca.
+            Frame::new()
+                .fill(Color32::WHITE)
+                .stroke(Stroke::new(1.0, p.border))
+                .corner_radius(14)
+                .inner_margin(Margin::symmetric(28, 20))
+                .show(ui, |ui| {
+                    ui.add(
+                        egui::Image::new(egui::include_image!("../../assets/brand/logo.svg"))
+                            .fit_to_exact_size(Vec2::new(240.0, 98.0)),
+                    );
+                });
+        }
         ui.add_space(14.0);
         ui.label(RichText::new(t!("app.name")).font(theme::font_bold(24.0)).color(p.text));
         ui.label(
