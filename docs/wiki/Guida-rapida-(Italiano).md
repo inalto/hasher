@@ -4,6 +4,8 @@
 
 ![Hasher con una lista di file, tema scuro](images/list-dark.png)
 
+**Versione web**: la stessa applicazione funziona anche nel browser, senza installare nulla, su <https://hash.martini-multimedia.net> ([Hasher Web](https://github.com/inalto/hasher-web)): gli hash vengono calcolati sul tuo dispositivo, nessun file viene caricato, e la pagina si può installare come app (anche da smartphone).
+
 ## Installazione
 
 Scarica il pacchetto dalla pagina [Releases](https://github.com/inalto/hasher/releases):

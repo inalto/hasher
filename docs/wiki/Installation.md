@@ -10,6 +10,8 @@ Hasher is distributed as a **portable package**: there is no installer, no servi
 
 Every release also contains `SHA256SUMS.txt`, see [Verify your download](#verify-your-download).
 
+> **Nothing to install?** [Hasher Web](https://github.com/inalto/hasher-web) is the browser edition of Hasher: open <https://hash.martini-multimedia.net>, drop a file and the hashes are computed on your device (nothing is uploaded). It can be installed as an app from Chrome or Edge (and pinned to the Windows taskbar) and works offline after the first visit.
+
 ## Windows
 
 1. Unzip the archive anywhere (Desktop, `C:\Tools`, a USB stick...).

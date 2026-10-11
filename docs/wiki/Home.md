@@ -16,6 +16,7 @@
 - **Light and dark themes** (follows the system), subtle animations that can be switched off, toast notifications.
 - **Interface languages**: Italian, English, French, German and Spanish, with automatic detection of the system language. See [[Settings]].
 - **No web runtime**: a native window drawn with OpenGL (egui), one executable per platform.
+- **Web edition**: [Hasher Web](https://github.com/inalto/hasher-web) runs the same interface in the browser (Rust compiled to WebAssembly, hashing in Web Workers, nothing is uploaded) and installs as a PWA. Try it at <https://hash.martini-multimedia.net>.
 
 ## Quick start
 
@@ -32,6 +33,7 @@
 | I want to... | Page |
 |---|---|
 | Download and run Hasher | [[Installation]] |
+| Use Hasher in the browser without installing anything | [hash.martini-multimedia.net](https://hash.martini-multimedia.net) (Hasher Web) |
 | Learn the interface and the shortcuts | [[User Guide]] |
 | Check a download against a published hash or a `.sha256` file | [[Verifying Hashes]] |
 | Save results as CSV, Excel, Word, JSON... | [[Exporting]] |
@@ -54,3 +56,5 @@ Hasher is © **Martini Multimedia s.a.s.**, <https://www.martini-multimedia.net>
 ## Downloads
 
 Binaries for Windows, macOS and Linux are published on the [Releases page](https://github.com/inalto/hasher/releases). Source code and issue tracker: <https://github.com/inalto/hasher>.
+
+The web edition needs no download: <https://hash.martini-multimedia.net> (source code: <https://github.com/inalto/hasher-web>).

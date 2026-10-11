@@ -26,6 +26,10 @@ un solo eseguibile, nessun runtime da installare, nessun installer. Trascini uno
 sulla finestra e ottieni subito tutti gli hash, calcolati in parallelo con **un'unica lettura**
 del file.
 
+Hasher esiste anche in **versione web** ([Hasher Web](https://github.com/inalto/hasher-web)): la stessa
+interfaccia compilata in WebAssembly, gli hash calcolati nel browser senza caricare nulla, installabile come
+app. Demo in funzione: <https://hash.martini-multimedia.net>.
+
 ## Screenshot
 
 <p align="center">
