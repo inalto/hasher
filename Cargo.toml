@@ -10,9 +10,9 @@ build = "build.rs"
 
 [dependencies]
 # GUI
-eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
-egui = "0.36"
-egui_extras = { version = "0.36", features = ["svg", "image"] }
+eframe = { version = "0.37", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+egui = "0.37"
+egui_extras = { version = "0.37", features = ["svg", "image"] }
 egui-phosphor = "0.14"
 rfd = "0.17"
 image = { version = "0.25", default-features = false, features = ["png"] }
@@ -38,7 +38,7 @@ rayon = "1.12"
 crossbeam-channel = "0.5"
 
 # Export
-rust_xlsxwriter = "0.99"
+rust_xlsxwriter = "0.100"
 docx-rs = "0.4"
 csv = "1.3"
 
